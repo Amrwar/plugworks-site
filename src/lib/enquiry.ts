@@ -89,3 +89,30 @@ export function normaliseEnquiry(input: Partial<Enquiry>): Enquiry {
     message: (input.message ?? "").trim(),
   };
 }
+
+/**
+ * The fields in the order the form asks for them.
+ *
+ * `validateEnquiry` builds its complaints in whatever order the checks run,
+ * which is not something callers should have to know or depend on. Anything
+ * that needs to walk the form in reading order walks this instead.
+ */
+export const ENQUIRY_FIELDS: readonly (keyof Enquiry)[] = [
+  "name",
+  "email",
+  "company",
+  "service",
+  "message",
+] as const;
+
+/**
+ * The first field the visitor needs to go back to.
+ *
+ * A rejected form used to redraw itself with the complaints in place and
+ * leave focus sitting on the submit button, so anyone not looking at the
+ * page had no idea anything had happened. This says where to send them:
+ * the topmost field with something wrong with it.
+ */
+export function firstErrorField(errors: EnquiryErrors): keyof Enquiry | undefined {
+  return ENQUIRY_FIELDS.find((field) => errors[field] !== undefined);
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 
 import { useReveal } from "@/hooks/useReveal";
 
@@ -9,6 +9,7 @@ import { SERVICES } from "@/data/services";
 import { SITE } from "@/data/site";
 import { SOCIAL_LINKS, socialLabel } from "@/data/social";
 import {
+  firstErrorField,
   OTHER_SERVICE,
   validateEnquiry,
   type Enquiry,
@@ -22,6 +23,7 @@ export default function Contact() {
   const [values, setValues] = useState<Enquiry>(EMPTY);
   const [errors, setErrors] = useState<EnquiryErrors>({});
   const [sent, setSent] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const update = (field: keyof Enquiry, value: string) => {
     setValues((current) => ({ ...current, [field]: value }));
@@ -34,10 +36,16 @@ export default function Contact() {
     event.preventDefault();
     const found = validateEnquiry(values);
     setErrors(found);
-    if (Object.keys(found).length === 0) {
-      setSent(true);
-      setValues(EMPTY);
+    const firstBad = firstErrorField(found);
+    if (firstBad) {
+      // Redrawing the complaints is no use to anyone not looking at the page.
+      // Putting the cursor in the first field that needs work announces what
+      // is wrong with it, because the field is described by its own message.
+      formRef.current?.querySelector<HTMLElement>(`#${firstBad}`)?.focus();
+      return;
     }
+    setSent(true);
+    setValues(EMPTY);
   };
 
   return (
@@ -134,7 +142,7 @@ export default function Contact() {
           {/* Right - Contact form */}
           <div className={`transition-all duration-700 delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <div className="gradient-border p-8 md:p-10">
-              <form className="space-y-6" onSubmit={onSubmit} noValidate>
+              <form ref={formRef} className="space-y-6" onSubmit={onSubmit} noValidate>
                 <div className="grid sm:grid-cols-2 gap-6">
                   <div>
                     <label htmlFor="name" className="block font-body text-sm text-plug-light/60 mb-2">

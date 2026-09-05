@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  ENQUIRY_FIELDS,
+  firstErrorField,
   isSendable,
   looksLikeEmail,
   MIN_MESSAGE,
@@ -189,5 +191,67 @@ describe("normalising an enquiry", () => {
     const padded = { name: "   ", email: "  ", message: "  " };
     expect(Object.keys(validateEnquiry(padded)).sort()).toEqual(["email", "message", "name"]);
     expect(normaliseEnquiry(padded).name).toBe("");
+  });
+});
+
+describe("ENQUIRY_FIELDS", () => {
+  it("lists the fields in the order the form asks for them", () => {
+    expect(ENQUIRY_FIELDS).toEqual(["name", "email", "company", "service", "message"]);
+  });
+
+  it("covers every field an enquiry carries", () => {
+    const enquiry = normaliseEnquiry({});
+    expect([...ENQUIRY_FIELDS].sort()).toEqual(Object.keys(enquiry).sort());
+  });
+});
+
+describe("firstErrorField", () => {
+  it("finds nothing wrong with a form that is good", () => {
+    expect(firstErrorField({})).toBeUndefined();
+  });
+
+  it("names the only field that is wrong", () => {
+    expect(firstErrorField({ message: "too short" })).toBe("message");
+  });
+
+  it("sends the visitor to the topmost problem, not the first one checked", () => {
+    expect(firstErrorField({ message: "too short", name: "missing" })).toBe("name");
+  });
+
+  it("prefers the email over the message, as the form is laid out", () => {
+    expect(firstErrorField({ message: "too short", email: "wrong" })).toBe("email");
+  });
+
+  it("ignores a field explicitly marked as fine", () => {
+    expect(firstErrorField({ name: undefined, email: "wrong" })).toBe("email");
+  });
+
+  it("points somewhere real for every form the validator rejects", () => {
+    const rejected = [
+      {},
+      { name: "Ada" },
+      { name: "Ada", email: "ada@example.com" },
+      { name: "Ada", email: "nope", message: "A long enough message to pass." },
+      { name: "Ada", email: "ada@example.com", service: "time-travel", message: "A long enough message." },
+    ];
+    for (const input of rejected) {
+      const errors = validateEnquiry(input);
+      expect(Object.keys(errors).length).toBeGreaterThan(0);
+      const field = firstErrorField(errors);
+      expect(field).toBeDefined();
+      expect(errors[field as keyof typeof errors]).toBeDefined();
+    }
+  });
+
+  it("finds nothing to fix on a form that is ready to send", () => {
+    const ready = {
+      name: "Ada",
+      email: "ada@example.com",
+      company: "",
+      service: "",
+      message: "We would like to talk about a launch film.",
+    };
+    expect(isSendable(ready)).toBe(true);
+    expect(firstErrorField(validateEnquiry(ready))).toBeUndefined();
   });
 });

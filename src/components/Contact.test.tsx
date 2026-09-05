@@ -6,7 +6,7 @@ import { officeLine } from "@/data/locations";
 import { SERVICES } from "@/data/services";
 import { SITE } from "@/data/site";
 import { SOCIAL_LINKS, socialLabel } from "@/data/social";
-import { serviceChoices } from "@/lib/enquiry";
+import { ENQUIRY_FIELDS, serviceChoices } from "@/lib/enquiry";
 
 const html = renderToStaticMarkup(<Contact />);
 
@@ -79,7 +79,7 @@ describe("the enquiry form", () => {
   });
 
   it("binds a label to every field", () => {
-    for (const field of ["name", "email", "company", "service", "message"]) {
+    for (const field of ENQUIRY_FIELDS) {
       expect(html).toContain(`for="${field}"`);
       expect(html).toContain(`id="${field}"`);
     }
@@ -103,6 +103,14 @@ describe("the enquiry form", () => {
     }
   });
 
+  it("gives every field the id the form focuses it by when it is rejected", () => {
+    // The submit handler looks the first bad field up by id; if a field ever
+    // renders under a different one, focus would go nowhere.
+    for (const field of ENQUIRY_FIELDS) {
+      expect(tagWithId(html, field)).toMatch(/^<(input|select|textarea)/);
+    }
+  });
+
   it("starts with every text field empty", () => {
     for (const field of ["name", "email", "company"]) {
       expect(tagWithId(html, field)).toContain('value=""');
@@ -122,7 +130,7 @@ describe("the enquiry form", () => {
   });
 
   it("starts with no complaint on the page", () => {
-    for (const field of ["name", "email", "company", "service", "message"]) {
+    for (const field of ENQUIRY_FIELDS) {
       expect(html).not.toContain(`id="${field}-error"`);
     }
   });
