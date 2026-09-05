@@ -4,7 +4,10 @@ import { useState, type FormEvent } from "react";
 
 import { useReveal } from "@/hooks/useReveal";
 
+import { officeLine } from "@/data/locations";
 import { SERVICES } from "@/data/services";
+import { SITE } from "@/data/site";
+import { SOCIAL_LINKS, socialLabel } from "@/data/social";
 import {
   OTHER_SERVICE,
   validateEnquiry,
@@ -78,7 +81,12 @@ export default function Contact() {
                 </div>
                 <div>
                   <p className="font-body text-sm text-plug-light/40">Email us</p>
-                  <p className="font-body text-plug-light">hello@plugworks.co</p>
+                  <a
+                    href={`mailto:${SITE.email}`}
+                    className="font-body text-plug-light hover:text-plug-electric transition-colors"
+                  >
+                    {SITE.email}
+                  </a>
                 </div>
               </div>
 
@@ -91,7 +99,7 @@ export default function Contact() {
                 </div>
                 <div>
                   <p className="font-body text-sm text-plug-light/40">Offices</p>
-                  <p className="font-body text-plug-light">Cairo, Egypt • Dubai, UAE</p>
+                  <p className="font-body text-plug-light">{officeLine()}</p>
                 </div>
               </div>
 
@@ -103,13 +111,21 @@ export default function Contact() {
                 </div>
                 <div>
                   <p className="font-body text-sm text-plug-light/40">Follow us</p>
-                  <div className="flex gap-3">
-                    <a href="#" className="font-body text-plug-light hover:text-plug-electric transition-colors">Instagram</a>
-                    <span className="text-plug-light/20">•</span>
-                    <a href="#" className="font-body text-plug-light hover:text-plug-electric transition-colors">LinkedIn</a>
-                    <span className="text-plug-light/20">•</span>
-                    <a href="#" className="font-body text-plug-light hover:text-plug-electric transition-colors">Behance</a>
-                  </div>
+                  <ul className="flex flex-wrap gap-x-3 gap-y-1">
+                    {SOCIAL_LINKS.map((link) => (
+                      <li key={link.id}>
+                        <a
+                          href={link.href}
+                          target="_blank"
+                          rel="noreferrer"
+                          aria-label={socialLabel(link)}
+                          className="font-body text-plug-light hover:text-plug-electric transition-colors"
+                        >
+                          {link.name}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </div>
             </div>
