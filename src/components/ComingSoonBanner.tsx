@@ -4,8 +4,10 @@ import { useState } from "react";
 
 import { marqueeItems } from "@/lib/marquee";
 
-/** The phrase the banner scrolls, and how many copies cover a wide screen. */
+/** The phrases the banner scrolls, and how many copies cover a wide screen. */
 const PHRASE = "Website Launching Soon";
+const TAGLINE = "Get ready for something electric";
+const CLOSER = "Coming Soon";
 const REPEATS = 4;
 
 export default function ComingSoonBanner() {
@@ -29,24 +31,22 @@ export default function ComingSoonBanner() {
         <div className="relative py-3 px-4">
           <div className="flex items-center justify-center gap-8 overflow-hidden">
             <div className="flex animate-marquee whitespace-nowrap gap-8">
-              {marqueeItems(PHRASE, REPEATS).map((_, i) => (
+              {marqueeItems(PHRASE, REPEATS).map((phrase, i) => (
                 <div key={i} className="flex items-center gap-8">
                   <span className="flex items-center gap-2 text-plug-black font-display font-bold text-sm tracking-wider uppercase">
                     <svg aria-hidden="true" className="w-4 h-4 animate-spark" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M13 3L4 14h7v7l9-11h-7V3z" />
                     </svg>
-                    Website Launching Soon
+                    {phrase}
                   </span>
                   <span className="text-plug-black/60">•</span>
-                  <span className="text-plug-black font-body text-sm">
-                    Get ready for something electric
-                  </span>
+                  <span className="text-plug-black font-body text-sm">{TAGLINE}</span>
                   <span className="text-plug-black/60">•</span>
                   <span className="flex items-center gap-2 text-plug-black font-display font-bold text-sm tracking-wider uppercase">
                     <svg aria-hidden="true" className="w-4 h-4 animate-spark" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M13 3L4 14h7v7l9-11h-7V3z" />
                     </svg>
-                    Coming Soon
+                    {CLOSER}
                   </span>
                   <span className="text-plug-black/60">•</span>
                 </div>
