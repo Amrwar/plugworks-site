@@ -28,3 +28,25 @@ export const LOCATIONS: readonly Location[] = [
     accent: "plug-electric",
   },
 ] as const;
+
+/** One office written the way an address reads: "Cairo, Egypt". */
+export function officeAddress(location: Location): string {
+  return `${location.city}, ${location.country}`;
+}
+
+/**
+ * Every office on a single line.
+ *
+ * The contact panel had "Cairo, Egypt • Dubai, UAE" typed into its markup, so
+ * opening a third office meant remembering to edit a string that lives
+ * nowhere near this data. Reading it from the list means it cannot be
+ * forgotten, and the separator stays the caller's choice.
+ */
+export function officeLine(separator = " • "): string {
+  return LOCATIONS.map(officeAddress).join(separator);
+}
+
+/** The countries the studio works from, in order and without repeats. */
+export function officeCountries(): string[] {
+  return Array.from(new Set(LOCATIONS.map((location) => location.country)));
+}

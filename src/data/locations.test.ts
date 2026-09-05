@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { LOCATIONS } from "./locations";
+import { LOCATIONS, officeAddress, officeCountries, officeLine } from "./locations";
 
 describe("where the studio works from", () => {
   it("names both offices", () => {
@@ -31,5 +31,53 @@ describe("where the studio works from", () => {
     for (const location of LOCATIONS) {
       expect(location.accent.startsWith("plug-")).toBe(true);
     }
+  });
+});
+
+describe("officeAddress", () => {
+  it("reads city first, then country", () => {
+    expect(officeAddress(LOCATIONS[0])).toBe("Cairo, Egypt");
+  });
+
+  it("writes an address for every office", () => {
+    for (const location of LOCATIONS) {
+      expect(officeAddress(location)).toContain(location.city);
+      expect(officeAddress(location)).toContain(location.country);
+    }
+  });
+});
+
+describe("officeLine", () => {
+  it("puts both offices on one line", () => {
+    expect(officeLine()).toBe("Cairo, Egypt • Dubai, UAE");
+  });
+
+  it("names every office it was given", () => {
+    for (const location of LOCATIONS) {
+      expect(officeLine()).toContain(officeAddress(location));
+    }
+  });
+
+  it("separates them with a bullet by default", () => {
+    expect(officeLine().split(" • ")).toHaveLength(LOCATIONS.length);
+  });
+
+  it("takes whatever separator the caller needs", () => {
+    expect(officeLine(" and ")).toBe("Cairo, Egypt and Dubai, UAE");
+  });
+
+  it("leaves no separator dangling at either end", () => {
+    expect(officeLine().trim()).toBe(officeLine());
+    expect(officeLine()).not.toMatch(/•\s*$/);
+  });
+});
+
+describe("officeCountries", () => {
+  it("lists the countries in the order the offices are given", () => {
+    expect(officeCountries()).toEqual(["Egypt", "UAE"]);
+  });
+
+  it("names a country once even if two offices share it", () => {
+    expect(new Set(officeCountries()).size).toBe(officeCountries().length);
   });
 });
