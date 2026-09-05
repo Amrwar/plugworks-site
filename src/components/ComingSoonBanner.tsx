@@ -29,7 +29,14 @@ export default function ComingSoonBanner() {
         
         {/* Marquee content */}
         <div className="relative py-3 px-4">
-          <div className="flex items-center justify-center gap-8 overflow-hidden">
+          {/* The run below is the same sentence four times over, which is a
+              scrolling effect to look at and an announcement repeated four
+              times to listen to. Say it once here, and hide the run. */}
+          <p className="sr-only">{`${PHRASE}. ${TAGLINE}.`}</p>
+          <div
+            aria-hidden="true"
+            className="flex items-center justify-center gap-8 overflow-hidden"
+          >
             <div className="flex animate-marquee whitespace-nowrap gap-8">
               {marqueeItems(PHRASE, REPEATS).map((phrase, i) => (
                 <div key={i} className="flex items-center gap-8">
