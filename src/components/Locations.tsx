@@ -4,7 +4,15 @@ import { useReveal } from "@/hooks/useReveal";
 
 
 import { LOCATIONS } from "@/data/locations";
+import { scatterDots } from "@/lib/scatter";
 
+/**
+ * The map dots behind the section.
+ *
+ * Built once at module scope: the field never changes, so there is no reason
+ * to rebuild it on every render.
+ */
+const MAP_DOTS = scatterDots({ count: 50, width: 1440, height: 600 });
 
 export default function Locations() {
   const { ref: sectionRef, isVisible } = useReveal<HTMLElement>(0.2);
@@ -21,15 +29,15 @@ export default function Locations() {
         <div className="absolute inset-0 grid-pattern opacity-30" />
         {/* Map-like dots pattern */}
         <svg aria-hidden="true" className="absolute inset-0 w-full h-full opacity-10" viewBox="0 0 1440 600">
-          {[...Array(50)].map((_, i) => (
+          {MAP_DOTS.map((dot, index) => (
             <circle
-              key={i}
-              cx={Math.random() * 1440}
-              cy={Math.random() * 600}
-              r={Math.random() * 2 + 1}
+              key={index}
+              cx={dot.cx}
+              cy={dot.cy}
+              r={dot.r}
               fill="#00E5FF"
               className="animate-pulse-slow"
-              style={{ animationDelay: `${Math.random() * 2}s` }}
+              style={{ animationDelay: `${dot.delay}s` }}
             />
           ))}
         </svg>
@@ -57,7 +65,7 @@ export default function Locations() {
         <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
           {LOCATIONS.map((location, index) => (
             <div
-              key={index}
+              key={location.country}
               className={`group relative transition-all duration-700 ${
                 isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
               }`}
