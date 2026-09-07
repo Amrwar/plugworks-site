@@ -1,5 +1,5 @@
-import { JOURNAL } from "./journal";
-import { CASE_STUDIES } from "./work";
+import { JOURNAL, orderedJournal, type JournalEntry } from "./journal";
+import { CASE_STUDIES, orderedWork, type CaseStudy } from "./work";
 import { SERVICES } from "./services";
 
 /** One page the site serves, as the sitemap and the footer both see it. */
@@ -31,16 +31,22 @@ export const STATIC_ROUTES: readonly SiteRoute[] = [
   { path: "faq", label: "Questions", changeFrequency: "monthly", priority: 0.6 },
 ] as const;
 
-/** One route per case study, in the order the work index shows them. */
-export function workRoutes(): SiteRoute[] {
-  return [...CASE_STUDIES]
-    .sort((a, b) => b.year - a.year || a.title.localeCompare(b.title))
-    .map((study) => ({
-      path: `work/${study.slug}`,
-      label: study.title,
-      changeFrequency: "yearly" as const,
-      priority: 0.5,
-    }));
+/**
+ * One route per case study, in the order the work index shows them.
+ *
+ * The order comes from `orderedWork` rather than being sorted again here.
+ * This file used to sort by year and title alone, which quietly dropped the
+ * featured-first rule the index applies: the moment a featured study is not
+ * also the newest, the footer and the sitemap would have listed the work in a
+ * different order from the page they link to, for no reason a reader could see.
+ */
+export function workRoutes(studies: readonly CaseStudy[] = CASE_STUDIES): SiteRoute[] {
+  return orderedWork(studies).map((study) => ({
+    path: `work/${study.slug}`,
+    label: study.title,
+    changeFrequency: "yearly" as const,
+    priority: 0.5,
+  }));
 }
 
 /** One route per service, in the order the services grid shows them. */
@@ -53,16 +59,20 @@ export function serviceRoutes(): SiteRoute[] {
   }));
 }
 
-/** One route per journal note, newest first. */
-export function journalRoutes(): SiteRoute[] {
-  return [...JOURNAL]
-    .sort((a, b) => (a.published === b.published ? 0 : a.published < b.published ? 1 : -1))
-    .map((entry) => ({
-      path: `journal/${entry.slug}`,
-      label: entry.title,
-      changeFrequency: "yearly" as const,
-      priority: 0.4,
-    }));
+/**
+ * One route per journal note, in the order the journal index shows them.
+ *
+ * Same reasoning as `workRoutes`: the copy of the sort that lived here had no
+ * tie-break, so two notes published on the same day came out in whatever order
+ * they happen to sit in the file while the index sorted them by title.
+ */
+export function journalRoutes(entries: readonly JournalEntry[] = JOURNAL): SiteRoute[] {
+  return orderedJournal(entries).map((entry) => ({
+    path: `journal/${entry.slug}`,
+    label: entry.title,
+    changeFrequency: "yearly" as const,
+    priority: 0.4,
+  }));
 }
 
 /** Every page the site serves, fixed pages first. */

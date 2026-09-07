@@ -9,9 +9,39 @@ import {
   serviceRoutes,
   workRoutes,
 } from "./routes";
-import { JOURNAL } from "./journal";
-import { CASE_STUDIES } from "./work";
+import { JOURNAL, orderedJournal, type JournalEntry } from "./journal";
+import { CASE_STUDIES, orderedWork, type CaseStudy } from "./work";
 import { SERVICES } from "./services";
+
+/** A case study with only the fields the route builder actually reads set. */
+function study(fields: Partial<CaseStudy> & Pick<CaseStudy, "slug">): CaseStudy {
+  return {
+    title: fields.slug,
+    client: "A client",
+    serviceId: SERVICES[0].id,
+    city: "Cairo",
+    year: 2025,
+    summary: "A summary.",
+    story: ["A paragraph."],
+    results: [],
+    credits: [],
+    featured: false,
+    ...fields,
+  };
+}
+
+/** The same, for a journal note. */
+function note(fields: Partial<JournalEntry> & Pick<JournalEntry, "slug">): JournalEntry {
+  return {
+    title: fields.slug,
+    standfirst: "A standfirst.",
+    published: "2025-01-01",
+    authorId: "someone",
+    tags: [],
+    body: ["A paragraph."],
+    ...fields,
+  };
+}
 
 describe("STATIC_ROUTES", () => {
   it("starts at the home page", () => {
@@ -49,11 +79,34 @@ describe("workRoutes", () => {
     expect(workRoutes()).toHaveLength(CASE_STUDIES.length);
   });
 
-  it("puts the newest work first", () => {
-    const years = workRoutes().map(
-      (route) => CASE_STUDIES.find((study) => `work/${study.slug}` === route.path)?.year ?? 0
+  it("lists the work in the order the work index does", () => {
+    expect(workRoutes().map((route) => route.path)).toEqual(
+      orderedWork().map((entry) => `work/${entry.slug}`)
     );
-    expect(years).toEqual([...years].sort((a, b) => b - a));
+  });
+
+  it("keeps featured work first even when it is not the newest", () => {
+    const paths = workRoutes([
+      study({ slug: "newest", year: 2030 }),
+      study({ slug: "featured-but-older", year: 2019, featured: true }),
+    ]).map((route) => route.path);
+    expect(paths).toEqual(["work/featured-but-older", "work/newest"]);
+  });
+
+  it("puts the newer of two unfeatured studies first", () => {
+    const paths = workRoutes([
+      study({ slug: "older", year: 2019 }),
+      study({ slug: "newer", year: 2030 }),
+    ]).map((route) => route.path);
+    expect(paths).toEqual(["work/newer", "work/older"]);
+  });
+
+  it("breaks a same-year tie on the title rather than on file order", () => {
+    const paths = workRoutes([
+      study({ slug: "zulu", title: "Zulu", year: 2025 }),
+      study({ slug: "alpha", title: "Alpha", year: 2025 }),
+    ]).map((route) => route.path);
+    expect(paths).toEqual(["work/alpha", "work/zulu"]);
   });
 
   it("files each study under the work path", () => {
@@ -150,11 +203,25 @@ describe("journalRoutes", () => {
     expect(journalRoutes()).toHaveLength(JOURNAL.length);
   });
 
+  it("lists the notes in the order the journal index does", () => {
+    expect(journalRoutes().map((route) => route.path)).toEqual(
+      orderedJournal().map((entry) => `journal/${entry.slug}`)
+    );
+  });
+
   it("puts the newest note first", () => {
     const dates = journalRoutes().map(
       (route) => JOURNAL.find((entry) => `journal/${entry.slug}` === route.path)?.published ?? ""
     );
     expect(dates).toEqual([...dates].sort().reverse());
+  });
+
+  it("breaks a same-day tie on the title rather than on file order", () => {
+    const paths = journalRoutes([
+      note({ slug: "zulu", title: "Zulu", published: "2025-06-01" }),
+      note({ slug: "alpha", title: "Alpha", published: "2025-06-01" }),
+    ]).map((route) => route.path);
+    expect(paths).toEqual(["journal/alpha", "journal/zulu"]);
   });
 
   it("files every note under the journal path", () => {
