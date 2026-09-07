@@ -12,6 +12,7 @@ import {
   publishedYear,
 } from "./journal";
 import { TEAM } from "./team";
+import { isIsoDate } from "@/lib/dates";
 
 describe("JOURNAL", () => {
   it("gives every note a unique slug", () => {
@@ -28,6 +29,14 @@ describe("JOURNAL", () => {
   it("dates every note as a plain calendar day", () => {
     for (const entry of JOURNAL) {
       expect(entry.published).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    }
+  });
+
+  it("dates every note as a day the calendar actually has", () => {
+    // The shape check above passes for "2025-02-31" too, which is how a typo
+    // in a date gets as far as the page.
+    for (const entry of JOURNAL) {
+      expect(isIsoDate(entry.published)).toBe(true);
     }
   });
 
@@ -200,6 +209,10 @@ describe("publishedYear", () => {
       expect(Number.isInteger(publishedYear(entry))).toBe(true);
     }
   });
+
+  it("refuses a date it cannot read rather than returning NaN", () => {
+    expect(() => publishedYear({ ...JOURNAL[0], published: "soon" })).toThrow();
+  });
 });
 
 describe("publishedLabel", () => {
@@ -219,5 +232,13 @@ describe("publishedLabel", () => {
     for (const entry of JOURNAL) {
       expect(publishedLabel(entry)).not.toContain("undefined");
     }
+  });
+
+  it("refuses a date the calendar does not have rather than labelling it", () => {
+    expect(() => publishedLabel({ ...JOURNAL[0], published: "2025-02-31" })).toThrow();
+  });
+
+  it("refuses a month outside the year rather than printing undefined", () => {
+    expect(() => publishedLabel({ ...JOURNAL[0], published: "2025-13-01" })).toThrow();
   });
 });

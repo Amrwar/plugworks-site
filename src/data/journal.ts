@@ -1,3 +1,5 @@
+import { formatIsoDate, isoYear } from "@/lib/dates";
+
 /** One note from the studio floor. */
 export type JournalEntry = {
   /** Stable key, and the last part of the note's url. */
@@ -118,25 +120,17 @@ export function moreReading(slug: string, limit = 2): JournalEntry[] {
 
 /** The year a note was published, as a number. */
 export function publishedYear(entry: JournalEntry): number {
-  return Number(entry.published.slice(0, 4));
+  return isoYear(entry.published);
 }
 
-/** The date written the way it is shown, e.g. "11 February 2025". */
+/**
+ * The date written the way it is shown, e.g. "11 February 2025".
+ *
+ * The month table and the string-splitting that used to live here are now in
+ * `lib/dates.ts`, where the parsing is checked: a `published` value that is
+ * not a real calendar date stops the build instead of printing a month of
+ * "undefined" into a `time` element.
+ */
 export function publishedLabel(entry: JournalEntry): string {
-  const MONTHS = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-  const [year, month, day] = entry.published.split("-");
-  return `${Number(day)} ${MONTHS[Number(month) - 1]} ${year}`;
+  return formatIsoDate(entry.published);
 }
