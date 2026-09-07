@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { SITE } from "@/data/site";
 import { canonicalUrl, metaDescription, openGraph, pageTitle, pageUrl } from "./seo";
+import { excerpt } from "./text";
 
 describe("the page title", () => {
   it("uses the tagline when no section is named", () => {
@@ -94,6 +95,26 @@ describe("the meta description", () => {
 
   it("collapses runs of whitespace", () => {
     expect(metaDescription("one    two\n\nthree", 160)).toBe("one two three");
+  });
+
+  it("cuts a description exactly the way a card excerpt is cut", () => {
+    const text =
+      "Plugworks is a creative and production house. Ready? Wait... there is rather more to say than this.";
+    for (const limit of [12, 20, 45, 52, 60]) {
+      expect(metaDescription(text, limit)).toBe(excerpt(text, limit));
+    }
+  });
+
+  it("does not print a question mark against the ellipsis", () => {
+    expect(metaDescription("Who? Somebody nobody has met", 12)).toBe("Who\u2026");
+  });
+
+  it("does not leave a run of dots against the ellipsis", () => {
+    expect(metaDescription("Wait... something else entirely", 15)).toBe("Wait\u2026");
+  });
+
+  it("does not return nearly the whole description when the limit is zero", () => {
+    expect(metaDescription("alpha bravo charlie", 0)).toBe("\u2026");
   });
 });
 

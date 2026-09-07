@@ -1,4 +1,5 @@
 import { SITE } from "@/data/site";
+import { truncateOnWord } from "@/lib/text";
 
 /** The page title, kept consistent wherever a title is needed. */
 export function pageTitle(section?: string): string {
@@ -30,14 +31,12 @@ export function pageUrl(path?: string): string {
  * A description trimmed to something a search result will actually show.
  *
  * Cuts on a word boundary and adds an ellipsis, so a result never ends
- * mid-word; a description already short enough is returned untouched.
+ * mid-word; a description already short enough is returned untouched. The
+ * cutting itself lives in `text.ts`, which is where the listing cards get
+ * theirs from too.
  */
 export function metaDescription(text: string = SITE.description, limit = 160): string {
-  const clean = text.trim().replace(/\s+/g, " ");
-  if (clean.length <= limit) return clean;
-  const cut = clean.slice(0, limit - 1);
-  const lastSpace = cut.lastIndexOf(" ");
-  return `${(lastSpace > 0 ? cut.slice(0, lastSpace) : cut).replace(/[.,;:]$/, "")}…`;
+  return truncateOnWord(text, limit);
 }
 
 /**

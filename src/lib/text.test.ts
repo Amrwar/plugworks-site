@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { excerpt, initials, listSentence, readingMinutes, slugify, wordCount } from "./text";
+import {
+  excerpt,
+  initials,
+  listSentence,
+  readingMinutes,
+  slugify,
+  truncateOnWord,
+  wordCount,
+} from "./text";
 
 describe("slugifying a title", () => {
   it("lower-cases and hyphenates", () => {
@@ -71,6 +79,52 @@ describe("reading time", () => {
 
   it("copes with a nonsense reading speed", () => {
     expect(readingMinutes(["one two three"], 0)).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe("truncating on a word boundary", () => {
+  it("leaves text that already fits completely alone", () => {
+    expect(truncateOnWord("Short enough.", 120)).toBe("Short enough.");
+  });
+
+  it("never returns more characters than the limit allows", () => {
+    for (const limit of [0, 1, 2, 5, 13, 40]) {
+      expect(truncateOnWord("alpha bravo charlie delta echo", limit).length).toBeLessThanOrEqual(
+        Math.max(1, limit)
+      );
+    }
+  });
+
+  it("does not return nearly the whole string when the limit is zero", () => {
+    expect(truncateOnWord("alpha bravo charlie", 0)).toBe("…");
+  });
+
+  it("cuts between words rather than inside one", () => {
+    expect(truncateOnWord("alpha bravo charlie", 14)).toBe("alpha bravo…");
+  });
+
+  it("falls back to a hard cut when the first word is longer than the limit", () => {
+    expect(truncateOnWord("antidisestablishmentarianism now", 10)).toBe("antidises…");
+  });
+
+  it("collapses whitespace before measuring", () => {
+    expect(truncateOnWord("one    two\n\nthree", 160)).toBe("one two three");
+  });
+
+  it("drops a full stop left sitting against the ellipsis", () => {
+    expect(truncateOnWord("Ready. Steady. Go for it now", 15)).toBe("Ready…");
+  });
+
+  it("drops a question mark left sitting against the ellipsis", () => {
+    expect(truncateOnWord("Who? Somebody nobody has met", 12)).toBe("Who…");
+  });
+
+  it("drops an exclamation mark left sitting against the ellipsis", () => {
+    expect(truncateOnWord("Stop! Somebody nobody has met", 13)).toBe("Stop…");
+  });
+
+  it("drops a whole run of punctuation, not just the last character", () => {
+    expect(truncateOnWord("Wait... something else entirely", 15)).toBe("Wait…");
   });
 });
 
