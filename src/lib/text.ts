@@ -20,6 +20,11 @@ export function wordCount(text: string): number {
   return trimmed === "" ? 0 : trimmed.split(/\s+/).length;
 }
 
+/** Words across a whole piece, counted a paragraph at a time. */
+export function totalWords(paragraphs: readonly string[]): number {
+  return paragraphs.reduce((total, paragraph) => total + wordCount(paragraph), 0);
+}
+
 /**
  * Roughly how long a case study takes to read.
  *
@@ -27,8 +32,7 @@ export function wordCount(text: string): number {
  * min read" helps nobody.
  */
 export function readingMinutes(paragraphs: readonly string[], wordsPerMinute = 200): number {
-  const words = paragraphs.reduce((total, paragraph) => total + wordCount(paragraph), 0);
-  return Math.max(1, Math.ceil(words / Math.max(1, wordsPerMinute)));
+  return Math.max(1, Math.ceil(totalWords(paragraphs) / Math.max(1, wordsPerMinute)));
 }
 
 /**

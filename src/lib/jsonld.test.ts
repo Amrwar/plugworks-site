@@ -1,12 +1,15 @@
 import { describe, expect, it } from "vitest";
+import { JOURNAL } from "@/data/journal";
 import { LOCATIONS } from "@/data/locations";
 import { SERVICES } from "@/data/services";
 import { SITE } from "@/data/site";
 import { serviceDetail } from "@/data/service-details";
+import { TEAM, teamMember } from "@/data/team";
 import { CASE_STUDIES } from "@/data/work";
 import {
   breadcrumbJsonLd,
   caseStudyJsonLd,
+  journalJsonLd,
   jsonLdString,
   organizationJsonLd,
   organizationJsonLdString,
@@ -160,5 +163,92 @@ describe("jsonLdString", () => {
 
   it("emits a single line, so it can sit in a script tag", () => {
     expect(jsonLdString(serviceJsonLd(SERVICES[0]))).not.toContain("\n");
+  });
+});
+
+describe("the journal note markup", () => {
+  const entry = JOURNAL[0];
+  const doc = journalJsonLd(entry);
+
+  it("declares the schema.org context", () => {
+    expect(doc["@context"]).toBe("https://schema.org");
+  });
+
+  it("is a BlogPosting rather than a generic creative work", () => {
+    expect(doc["@type"]).toBe("BlogPosting");
+  });
+
+  it("uses the note title as the headline", () => {
+    expect(doc.headline).toBe(entry.title);
+  });
+
+  it("describes the note with its own standfirst", () => {
+    expect(doc.description).toBe(entry.standfirst);
+  });
+
+  it("points at the page the note is actually served from", () => {
+    expect(doc.url).toBe(`${SITE.url}/journal/${entry.slug}`);
+  });
+
+  it("publishes the date exactly as the time element carries it", () => {
+    expect(doc.datePublished).toBe(entry.published);
+    expect(doc.datePublished).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it("credits the person the byline credits", () => {
+    const author = teamMember(entry.authorId);
+    expect(doc.author).toEqual({
+      "@type": "Person",
+      name: author?.name,
+      jobTitle: author?.role,
+    });
+  });
+
+  it("falls back to the studio when the note credits nobody on the team", () => {
+    const orphan = journalJsonLd({ ...entry, authorId: "nobody-here" });
+    expect(orphan.author).toEqual({
+      "@type": "Organization",
+      name: SITE.name,
+      url: SITE.url,
+    });
+  });
+
+  it("names the studio as the publisher", () => {
+    expect(doc.publisher).toEqual({ "@type": "Organization", name: SITE.name, url: SITE.url });
+  });
+
+  it("carries the tags the page files the note under", () => {
+    expect(doc.keywords).toEqual([...entry.tags]);
+  });
+
+  it("counts the words in the body rather than guessing", () => {
+    expect(doc.wordCount).toBe(
+      entry.body.reduce((total, paragraph) => total + paragraph.trim().split(/\s+/).length, 0)
+    );
+  });
+
+  it("states the reading time in the duration format the vocabulary wants", () => {
+    expect(doc.timeRequired).toMatch(/^PT\d+M$/);
+  });
+
+  it("refuses a note whose date is not a real one", () => {
+    expect(() => journalJsonLd({ ...entry, published: "2025-02-31" })).toThrow(/usable date/);
+  });
+
+  it("builds a document for every note the site serves", () => {
+    for (const note of JOURNAL) {
+      const built = journalJsonLd(note);
+      expect(built.headline).toBe(note.title);
+      expect(JSON.parse(jsonLdString(built))).toEqual(built);
+    }
+  });
+
+  it("only ever credits somebody the studio data knows about", () => {
+    for (const note of JOURNAL) {
+      const built = journalJsonLd(note);
+      if (built.author["@type"] === "Person") {
+        expect(TEAM.map((member) => member.name)).toContain(built.author.name);
+      }
+    }
   });
 });

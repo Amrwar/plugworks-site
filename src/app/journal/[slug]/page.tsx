@@ -9,7 +9,7 @@ import Navigation from "@/components/Navigation";
 import PageHeader from "@/components/PageHeader";
 import { JOURNAL, journalEntry, moreReading, publishedLabel } from "@/data/journal";
 import { teamMember } from "@/data/team";
-import { breadcrumbJsonLd } from "@/lib/jsonld";
+import { breadcrumbJsonLd, journalJsonLd } from "@/lib/jsonld";
 import { metaDescription, pageTitle, pageUrl } from "@/lib/seo";
 import { readingMinutes } from "@/lib/text";
 
@@ -45,6 +45,7 @@ export default async function JournalNote({ params }: PageProps) {
   return (
     <div className="min-h-screen bg-plug-black">
       <Navigation />
+      <JsonLd document={journalJsonLd(entry)} />
       <JsonLd
         document={breadcrumbJsonLd([
           { label: "Home", path: "" },
